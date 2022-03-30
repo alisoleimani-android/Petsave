@@ -32,27 +32,19 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.data.cache
+package com.raywenderlich.android.petsave.common.data.api
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import com.raywenderlich.android.petsave.common.data.cache.daos.OrganizationsDao
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedAnimalWithDetails
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedPhoto
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedTag
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedVideo
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedorganization.CachedOrganization
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
 
-@Database(
-    entities = [
-        CachedPhoto::class,
-        CachedVideo::class,
-        CachedTag::class,
-        CachedAnimalWithDetails::class,
-        CachedOrganization::class
-    ],
-    version = 1
-)
-abstract class PetSaveDatabase : RoomDatabase() {
-    abstract fun organizationsDao(): OrganizationsDao
+class ConnectionManager @Inject constructor(@ApplicationContext private val context: Context) {
+
+    fun isConnected(): Boolean {
+        val manager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo: NetworkInfo? = manager.activeNetworkInfo
+        return networkInfo?.isConnectedOrConnecting == true
+    }
 }

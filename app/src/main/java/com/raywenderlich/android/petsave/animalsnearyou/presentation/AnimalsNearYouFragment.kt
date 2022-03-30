@@ -17,7 +17,7 @@ class AnimalsNearYouFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         _binding = FragmentAnimalsNearYouBinding.inflate(inflater, container, false)
 
         return binding.root

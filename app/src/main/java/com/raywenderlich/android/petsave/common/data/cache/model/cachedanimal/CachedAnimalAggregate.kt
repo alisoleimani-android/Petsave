@@ -32,27 +32,29 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.data.cache
+package com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import com.raywenderlich.android.petsave.common.data.cache.daos.OrganizationsDao
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedAnimalWithDetails
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedPhoto
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedTag
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedVideo
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedorganization.CachedOrganization
+import com.raywenderlich.android.petsave.common.domain.model.animal.details.AnimalWithDetails
 
-@Database(
-    entities = [
-        CachedPhoto::class,
-        CachedVideo::class,
-        CachedTag::class,
-        CachedAnimalWithDetails::class,
-        CachedOrganization::class
-    ],
-    version = 1
-)
-abstract class PetSaveDatabase : RoomDatabase() {
-    abstract fun organizationsDao(): OrganizationsDao
+data class CachedAnimalAggregate(
+    val animal: CachedAnimalWithDetails,
+    val photos: List<CachedPhoto>,
+    val videos: List<CachedVideo>,
+    val tags: List<CachedTag>
+) {
+
+    companion object {
+        fun fromDomain(animalWithDetails: AnimalWithDetails): CachedAnimalAggregate {
+            return CachedAnimalAggregate(
+                animal = CachedAnimalWithDetails.fromDomain(animalWithDetails),
+                photos = animalWithDetails.media.photos.map {
+                    CachedPhoto.fromDomain(animalWithDetails.id, it)
+                },
+                videos = animalWithDetails.media.videos.map {
+                    CachedVideo.fromDomain(animalWithDetails.id, it)
+                },
+                tags = animalWithDetails.tags.map { CachedTag(it) }
+            )
+        }
+    }
 }

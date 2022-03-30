@@ -37,39 +37,32 @@ package com.raywenderlich.android.petsave.common.data.di
 import com.raywenderlich.android.petsave.common.data.api.ApiConstants
 import com.raywenderlich.android.petsave.common.data.api.PetFinderApi
 import com.raywenderlich.android.petsave.common.data.api.interceptors.LoggingInterceptor
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import javax.inject.Singleton
 
-@InstallIn(SingletonComponent::class)
-@Module
-class ApiModule {
+object ApiModule {
 
-    @Provides
-    @Singleton
-    fun provideApi(okHttpClient: OkHttpClient): PetFinderApi {
-        return Retrofit.Builder()
-            .baseUrl(ApiConstants.BASE_ENDPOINT)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create())
+    fun provideApi(builder: Retrofit.Builder): PetFinderApi {
+        return builder
             .build()
             .create(PetFinderApi::class.java)
     }
 
-    @Provides
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit.Builder {
+        return Retrofit.Builder()
+            .baseUrl(ApiConstants.BASE_ENDPOINT)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create())
+    }
+
     fun provideOkHttpClient(httpLoggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(httpLoggingInterceptor)
             .build()
     }
 
-    @Provides
     fun provideHttpLoggingInterceptor(loggingInterceptor: LoggingInterceptor): HttpLoggingInterceptor {
         val interceptor = HttpLoggingInterceptor(loggingInterceptor)
 

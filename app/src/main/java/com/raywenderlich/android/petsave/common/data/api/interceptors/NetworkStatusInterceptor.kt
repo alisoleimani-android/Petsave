@@ -32,27 +32,21 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.data.cache
+package com.raywenderlich.android.petsave.common.data.api.interceptors
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import com.raywenderlich.android.petsave.common.data.cache.daos.OrganizationsDao
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedAnimalWithDetails
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedPhoto
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedTag
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedanimal.CachedVideo
-import com.raywenderlich.android.petsave.common.data.cache.model.cachedorganization.CachedOrganization
+import com.raywenderlich.android.petsave.common.data.api.ConnectionManager
+import com.raywenderlich.android.petsave.common.domain.model.NetworkUnavailableException
+import okhttp3.Interceptor
+import okhttp3.Response
+import javax.inject.Inject
 
-@Database(
-    entities = [
-        CachedPhoto::class,
-        CachedVideo::class,
-        CachedTag::class,
-        CachedAnimalWithDetails::class,
-        CachedOrganization::class
-    ],
-    version = 1
-)
-abstract class PetSaveDatabase : RoomDatabase() {
-    abstract fun organizationsDao(): OrganizationsDao
+class NetworkStatusInterceptor @Inject constructor(private val connectionManager: ConnectionManager) :
+    Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        return if (connectionManager.isConnected()) {
+            chain.proceed(chain.request())
+        } else {
+            throw NetworkUnavailableException()
+        }
+    }
 }
