@@ -39,13 +39,14 @@ object ApiConstants {
     const val AUTH_ENDPOINT = "oauth2/token/"
     const val ANIMALS_ENDPOINT = "animals"
 
-    const val KEY = "INSERT_YOUR_KEY_HERE"
-    const val SECRET = "INSERT_YOUR_SECRET_HERE"
+    const val KEY = "eV0xVAObyiTIYrgyrz6t3pUdR1nqK6fvkO65sxGEpuo1BdFdCH"
+    const val SECRET = "c5esi9tKNPB2Dk3TDRgZF6MET31tnQEAb4WjTUzx"
 }
 
 object ApiParameters {
     const val TOKEN_TYPE = "Bearer "
     const val AUTH_HEADER = "Authorization"
+    const val NO_AUTH_HEADER = "no_auth_header"
     const val GRANT_TYPE_KEY = "grant_type"
     const val GRANT_TYPE_VALUE = "client_credentials"
     const val CLIENT_ID = "client_id"
