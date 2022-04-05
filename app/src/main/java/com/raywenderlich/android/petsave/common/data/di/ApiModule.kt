@@ -56,9 +56,7 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideApi(builder: Retrofit.Builder): PetFinderApi {
-        return builder
-            .build()
-            .create(PetFinderApi::class.java)
+        return builder.build().create(PetFinderApi::class.java)
     }
 
     @Provides
