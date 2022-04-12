@@ -34,18 +34,43 @@
 
 package com.raywenderlich.android.petsave.common.data.di
 
+import android.content.Context
+import androidx.room.Room
+import com.raywenderlich.android.petsave.common.data.cache.Cache
 import com.raywenderlich.android.petsave.common.data.cache.PetSaveDatabase
+import com.raywenderlich.android.petsave.common.data.cache.RoomCache
+import com.raywenderlich.android.petsave.common.data.cache.daos.AnimalsDao
 import com.raywenderlich.android.petsave.common.data.cache.daos.OrganizationsDao
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class CacheModule {
 
+    @Binds
+    abstract fun bindCache(cache: RoomCache): Cache
+
     companion object {
+
+        @Singleton
+        @Provides
+        fun provideDatabase(
+            @ApplicationContext context: Context
+        ): PetSaveDatabase = Room.databaseBuilder(
+            context,
+            PetSaveDatabase::class.java,
+            "petsave.db"
+        ).build()
+
+        @Provides
+        fun provideAnimalsDao(petSaveDatabase: PetSaveDatabase): AnimalsDao =
+            petSaveDatabase.animalsDao()
 
         @Provides
         fun provideOrganizationsDao(petSaveDatabase: PetSaveDatabase): OrganizationsDao =
