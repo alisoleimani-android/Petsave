@@ -8,7 +8,7 @@ import java.io.InputStream
 object JsonReader {
   fun getJson(path: String): String {
     return try {
-      val context = InstrumentationRegistry.getInstrumentation().context
+      val context = InstrumentationRegistry.getInstrumentation().targetContext
       val jsonStream: InputStream = context.assets.open("networkresponses/$path")
       String(jsonStream.readBytes())
     } catch (exception: IOException) {
