@@ -1,11 +1,15 @@
 package com.raywenderlich.android.petsave.common.data
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import com.raywenderlich.android.petsave.common.data.api.PetFinderApi
 import com.raywenderlich.android.petsave.common.data.api.model.mappers.ApiAnimalMapper
 import com.raywenderlich.android.petsave.common.data.api.model.mappers.ApiPaginationMapper
 import com.raywenderlich.android.petsave.common.data.api.utils.FakeServer
 import com.raywenderlich.android.petsave.common.data.cache.Cache
+import com.raywenderlich.android.petsave.common.data.cache.PetSaveDatabase
+import com.raywenderlich.android.petsave.common.data.cache.RoomCache
+import com.raywenderlich.android.petsave.common.data.di.CacheModule
 import com.raywenderlich.android.petsave.common.data.di.PreferencesModule
 import com.raywenderlich.android.petsave.common.data.preferences.FakePreferences
 import com.raywenderlich.android.petsave.common.data.preferences.Preferences
@@ -24,7 +28,7 @@ import retrofit2.Retrofit
 import javax.inject.Inject
 
 @HiltAndroidTest
-@UninstallModules(PreferencesModule::class)
+@UninstallModules(PreferencesModule::class, CacheModule::class)
 class PetFinderAnimalRepositoryTest {
 
     private val fakeServer = FakeServer()
@@ -34,8 +38,13 @@ class PetFinderAnimalRepositoryTest {
     @get:Rule
     var hiltRule = HiltAndroidRule(this)
 
+    @get:Rule
+    var instantTaskExecutorRule = InstantTaskExecutorRule()
+
+    private lateinit var cache: Cache
+
     @Inject
-    lateinit var cache: Cache
+    lateinit var database: PetSaveDatabase
 
     @Inject
     lateinit var retrofitBuilder: Retrofit.Builder
@@ -68,6 +77,8 @@ class PetFinderAnimalRepositoryTest {
             .build()
             .create(PetFinderApi::class.java)
 
+        cache = RoomCache(database.organizationsDao(), database.animalsDao())
+
         repository = PetFinderAnimalRepository(api, cache, apiAnimalMapper, apiPaginationMapper)
     }
 
@@ -83,6 +94,27 @@ class PetFinderAnimalRepositoryTest {
         // Then
         val animal = paginatedAnimals.animals.first()
         assertThat(animal.id).isEqualTo(expectedAnimalId)
+    }
+
+    @Test
+    fun insertAnimals_success() {
+        // Given
+        val expectedAnimalId = 124L
+        fakeServer.setHappyPathDispatcher()
+
+        // When
+        runBlocking {
+            val paginatedAnimals = repository.requestMoreAnimals(1, 100)
+            val animal = paginatedAnimals.animals.first()
+            repository.storeAnimals(listOf(animal))
+        }
+
+        // Then
+        repository.getAnimals().test().run {
+            assertNoErrors()
+            assertNotComplete()
+            assertValue { it.first().id == expectedAnimalId }
+        }
     }
 
     @After
