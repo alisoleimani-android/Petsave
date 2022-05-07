@@ -36,7 +36,8 @@ package com.raywenderlich.android.petsave.common
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -50,8 +51,7 @@ import com.raywenderlich.android.petsave.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-
-    private val navController by lazy { findNavController(R.id.nav_host_fragment) }
+    private lateinit var navController: NavController
     private val appBarConfiguration by lazy {
         AppBarConfiguration(topLevelDestinationIds = setOf(R.id.animalsNearYou, R.id.search))
     }
@@ -64,8 +64,15 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        initNavController()
         setupActionBar()
         setupBottomNav()
+    }
+
+    private fun initNavController() {
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
     }
 
     override fun onSupportNavigateUp(): Boolean {
