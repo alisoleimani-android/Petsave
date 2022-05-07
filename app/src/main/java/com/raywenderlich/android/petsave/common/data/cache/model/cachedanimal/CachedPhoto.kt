@@ -45,8 +45,8 @@ import com.raywenderlich.android.petsave.common.domain.model.animal.Media
     foreignKeys = [
         ForeignKey(
             entity = CachedAnimalWithDetails::class,
-            parentColumns = arrayOf("animalId"),
-            childColumns = arrayOf("animalId"),
+            parentColumns = ["animalId"],
+            childColumns = ["animalId"],
             onDelete = ForeignKey.CASCADE
         )
     ],

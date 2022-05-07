@@ -38,8 +38,7 @@ import com.raywenderlich.android.petsave.common.data.api.model.ApiAttributes
 import com.raywenderlich.android.petsave.common.domain.model.animal.details.HealthDetails
 import javax.inject.Inject
 
-class ApiHealthDetailsMapper @Inject constructor() :
-    ApiMapper<ApiAttributes?, HealthDetails> {
+class ApiHealthDetailsMapper @Inject constructor() : ApiMapper<ApiAttributes?, HealthDetails> {
 
     override fun mapToDomain(apiEntity: ApiAttributes?): HealthDetails {
         return HealthDetails(

@@ -32,24 +32,19 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.domain.repositories
+package com.raywenderlich.android.petsave.common.presentation.model.mappers
 
 import com.raywenderlich.android.petsave.common.domain.model.animal.Animal
-import com.raywenderlich.android.petsave.common.domain.model.animal.details.AnimalWithDetails
-import com.raywenderlich.android.petsave.common.domain.model.pagination.PaginatedAnimals
-import io.reactivex.Flowable
+import com.raywenderlich.android.petsave.common.presentation.model.UIAnimal
+import javax.inject.Inject
 
-interface AnimalRepository {
-    fun getAnimals(): Flowable<List<Animal>>
+class UiAnimalMapper @Inject constructor() : UiMapper<Animal, UIAnimal> {
 
-    suspend fun requestMoreAnimals(pageToLoad: Int, numberOfItems: Int): PaginatedAnimals
-
-    suspend fun storeAnimals(animals: List<AnimalWithDetails>)
-
-//  TODO: Uncomment for remote search
-//  suspend fun searchAnimalsRemotely(
-//      pageToLoad: Int,
-//      searchParameters: SearchParameters,
-//      numberOfItems: Int
-//  ): PaginatedAnimals
+    override fun mapToView(input: Animal): UIAnimal {
+        return UIAnimal(
+            id = input.id,
+            name = input.name,
+            photo = input.media.getFirstSmallestAvailablePhoto()
+        )
+    }
 }

@@ -32,24 +32,29 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.domain.repositories
+package com.raywenderlich.android.petsave.common.di
 
-import com.raywenderlich.android.petsave.common.domain.model.animal.Animal
-import com.raywenderlich.android.petsave.common.domain.model.animal.details.AnimalWithDetails
-import com.raywenderlich.android.petsave.common.domain.model.pagination.PaginatedAnimals
-import io.reactivex.Flowable
+import com.raywenderlich.android.petsave.common.utils.CoroutineDispatchersProvider
+import com.raywenderlich.android.petsave.common.utils.DispatchersProvider
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityRetainedComponent
+import io.reactivex.disposables.CompositeDisposable
 
-interface AnimalRepository {
-    fun getAnimals(): Flowable<List<Animal>>
+@Module
+@InstallIn(ActivityRetainedComponent::class)
+abstract class ActivityRetainedModule {
 
-    suspend fun requestMoreAnimals(pageToLoad: Int, numberOfItems: Int): PaginatedAnimals
+    // bind repository here
 
-    suspend fun storeAnimals(animals: List<AnimalWithDetails>)
+    @Binds
+    abstract fun bindDispatchersProvider(dispatchersProvider: CoroutineDispatchersProvider):
+        DispatchersProvider
 
-//  TODO: Uncomment for remote search
-//  suspend fun searchAnimalsRemotely(
-//      pageToLoad: Int,
-//      searchParameters: SearchParameters,
-//      numberOfItems: Int
-//  ): PaginatedAnimals
+    companion object {
+        @Provides
+        fun provideCompositeDisposable() = CompositeDisposable()
+    }
 }

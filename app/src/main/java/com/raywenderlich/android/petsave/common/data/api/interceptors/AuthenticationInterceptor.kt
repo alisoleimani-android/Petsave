@@ -41,7 +41,6 @@ import com.raywenderlich.android.petsave.common.data.api.ApiParameters.CLIENT_ID
 import com.raywenderlich.android.petsave.common.data.api.ApiParameters.CLIENT_SECRET
 import com.raywenderlich.android.petsave.common.data.api.ApiParameters.GRANT_TYPE_KEY
 import com.raywenderlich.android.petsave.common.data.api.ApiParameters.GRANT_TYPE_VALUE
-import com.raywenderlich.android.petsave.common.data.api.ApiParameters.NO_AUTH_HEADER
 import com.raywenderlich.android.petsave.common.data.api.ApiParameters.TOKEN_TYPE
 import com.raywenderlich.android.petsave.common.data.api.model.ApiToken
 import com.raywenderlich.android.petsave.common.data.preferences.Preferences
@@ -66,26 +65,21 @@ class AuthenticationInterceptor @Inject constructor(
         val tokenExpirationTime = Instant.ofEpochSecond(preferences.getTokenExpirationTime())
         val request = chain.request()
 
-        // Some requests don't need auth header, here we're detecting them.
-        // And also we need to add a header with value of NO_AUTH_HEADER to these requests.
-        if (request.headers[NO_AUTH_HEADER] != null) return chain.proceed(request)
+        // For requests that don't need authentication
+        // if (chain.request().headers[NO_AUTH_HEADER] != null) return chain.proceed(request)
+        val interceptedRequest: Request
 
-
-        val interceptedRequest: Request = if (tokenExpirationTime.isAfter(Instant.now())) {
-            chain.createAuthenticatedRequest(token)
+        if (tokenExpirationTime.isAfter(Instant.now())) {
+            // token is still valid, so we can proceed with the request
+            interceptedRequest = chain.createAuthenticatedRequest(token)
         } else {
+            // Token expired. Gotta refresh it before proceeding with the actual request
+            val tokenRefreshResponse = chain.refreshToken()
 
-            // Request to refresh access token because it's not valid anymore
-            val refreshTokenResponse = chain.refreshToken()
+            interceptedRequest = if (tokenRefreshResponse.isSuccessful) {
+                val newToken = mapToken(tokenRefreshResponse)
 
-            // Checking the request is successful or not
-            if (refreshTokenResponse.isSuccessful) {
-
-                // Mapping Response to ApiToken
-                val newToken = mapToken(refreshTokenResponse)
                 if (newToken.isValid()) {
-
-                    // Save refreshed token to preferences
                     storeNewToken(newToken)
                     chain.createAuthenticatedRequest(newToken.accessToken!!)
                 } else {
@@ -95,6 +89,7 @@ class AuthenticationInterceptor @Inject constructor(
                 request
             }
         }
+
         return chain.proceedDeletingTokenIfUnauthorized(interceptedRequest)
     }
 
@@ -106,7 +101,10 @@ class AuthenticationInterceptor @Inject constructor(
     }
 
     private fun Interceptor.Chain.refreshToken(): Response {
-        val url = request().url.newBuilder(AUTH_ENDPOINT)!!.build()
+        val url = request()
+            .url
+            .newBuilder(AUTH_ENDPOINT)!!
+            .build()
 
         val body = FormBody.Builder()
             .add(GRANT_TYPE_KEY, GRANT_TYPE_VALUE)

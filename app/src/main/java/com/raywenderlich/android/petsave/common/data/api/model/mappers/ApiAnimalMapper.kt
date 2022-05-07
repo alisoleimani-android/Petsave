@@ -53,6 +53,19 @@ class ApiAnimalMapper @Inject constructor(
     private val apiContactMapper: ApiContactMapper
 ) : ApiMapper<ApiAnimal, AnimalWithDetails> {
 
+    override fun mapToDomain(apiEntity: ApiAnimal): AnimalWithDetails {
+        return AnimalWithDetails(
+            id = apiEntity.id ?: throw MappingException("Animal ID cannot be null"),
+            name = apiEntity.name.orEmpty(),
+            type = apiEntity.type.orEmpty(),
+            details = parseAnimalDetails(apiEntity),
+            media = mapMedia(apiEntity),
+            tags = apiEntity.tags.orEmpty().map { it.orEmpty() },
+            adoptionStatus = parseAdoptionStatus(apiEntity.status),
+            publishedAt = DateTimeUtils.parse(apiEntity.publishedAt.orEmpty()) // throws exception if empty
+        )
+    }
+
     private fun parseAnimalDetails(apiAnimal: ApiAnimal): Details {
         return Details(
             description = apiAnimal.description.orEmpty(),
@@ -71,6 +84,7 @@ class ApiAnimalMapper @Inject constructor(
 
     private fun parseAge(age: String?): Age {
         if (age.isNullOrEmpty()) return Age.UNKNOWN
+        // will throw IllegalStateException if the string does not match any enum value
         return Age.valueOf(age.uppercase(Locale.ROOT))
     }
 
@@ -109,15 +123,4 @@ class ApiAnimalMapper @Inject constructor(
             distance = apiAnimal.distance ?: -1f
         )
     }
-
-    override fun mapToDomain(apiEntity: ApiAnimal) = AnimalWithDetails(
-        id = apiEntity.id ?: throw MappingException("Animal ID cannot be null"),
-        name = apiEntity.name.orEmpty(),
-        type = apiEntity.type.orEmpty(),
-        details = parseAnimalDetails(apiEntity),
-        media = mapMedia(apiEntity),
-        tags = apiEntity.tags.orEmpty().map { it.orEmpty() },
-        adoptionStatus = parseAdoptionStatus(apiEntity.status),
-        publishedAt = DateTimeUtils.parse(apiEntity.publishedAt.orEmpty())
-    )
 }

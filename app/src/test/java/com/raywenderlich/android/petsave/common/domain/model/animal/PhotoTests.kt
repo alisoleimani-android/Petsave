@@ -1,12 +1,14 @@
 package com.raywenderlich.android.petsave.common.domain.model.animal
 
-import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
+
 class PhotoTests {
+
     private val mediumPhoto = "mediumPhoto"
     private val fullPhoto = "fullPhoto"
-    private val invalidPhoto = "" // what’s tested in Photo.isValidPhoto()
+    private val invalidPhoto = "" // what's tested in Photo.isValidPhoto()
 
     @Test
     fun photo_getSmallestAvailablePhoto_hasMediumPhoto() {
@@ -18,7 +20,7 @@ class PhotoTests {
         val smallestPhoto = photo.getSmallestAvailablePhoto()
 
         // Then
-        assertThat(smallestPhoto).isEqualTo(expectedValue)
+        assertEquals(smallestPhoto, expectedValue)
     }
 
     @Test
@@ -31,7 +33,7 @@ class PhotoTests {
         val smallestPhoto = photo.getSmallestAvailablePhoto()
 
         // Then
-        assertThat(smallestPhoto).isEqualTo(expectedValue)
+        assertEquals(smallestPhoto, expectedValue)
     }
 
     @Test
@@ -44,6 +46,6 @@ class PhotoTests {
         val smallestPhoto = photo.getSmallestAvailablePhoto()
 
         // Then
-        assertThat(smallestPhoto).isEqualTo(expectedValue)
+        assertEquals(smallestPhoto, expectedValue)
     }
 }

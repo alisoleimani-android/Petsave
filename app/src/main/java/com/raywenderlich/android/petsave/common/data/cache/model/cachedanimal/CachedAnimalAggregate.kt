@@ -42,19 +42,16 @@ import com.raywenderlich.android.petsave.common.domain.model.animal.details.Anim
 data class CachedAnimalAggregate(
     @Embedded
     val animal: CachedAnimalWithDetails,
-
     @Relation(
         parentColumn = "animalId",
         entityColumn = "animalId"
     )
     val photos: List<CachedPhoto>,
-
     @Relation(
         parentColumn = "animalId",
         entityColumn = "animalId"
     )
     val videos: List<CachedVideo>,
-
     @Relation(
         parentColumn = "animalId",
         entityColumn = "tag",

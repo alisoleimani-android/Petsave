@@ -32,24 +32,8 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.domain.repositories
+package com.raywenderlich.android.petsave.common.utils
 
-import com.raywenderlich.android.petsave.common.domain.model.animal.Animal
-import com.raywenderlich.android.petsave.common.domain.model.animal.details.AnimalWithDetails
-import com.raywenderlich.android.petsave.common.domain.model.pagination.PaginatedAnimals
-import io.reactivex.Flowable
+import javax.inject.Inject
 
-interface AnimalRepository {
-    fun getAnimals(): Flowable<List<Animal>>
-
-    suspend fun requestMoreAnimals(pageToLoad: Int, numberOfItems: Int): PaginatedAnimals
-
-    suspend fun storeAnimals(animals: List<AnimalWithDetails>)
-
-//  TODO: Uncomment for remote search
-//  suspend fun searchAnimalsRemotely(
-//      pageToLoad: Int,
-//      searchParameters: SearchParameters,
-//      numberOfItems: Int
-//  ): PaginatedAnimals
-}
+class CoroutineDispatchersProvider @Inject constructor() : DispatchersProvider

@@ -71,10 +71,12 @@ class AnimalsAdapter : ListAdapter<UIAnimal, AnimalsAdapter.AnimalsViewHolder>(I
 
 private val ITEM_COMPARATOR = object : DiffUtil.ItemCallback<UIAnimal>() {
     override fun areItemsTheSame(oldItem: UIAnimal, newItem: UIAnimal): Boolean {
-        return oldItem.id == newItem.id
+        // TODO: compare identity
+        return true
     }
 
     override fun areContentsTheSame(oldItem: UIAnimal, newItem: UIAnimal): Boolean {
-        return oldItem.name == newItem.name && oldItem.photo == newItem.photo
+        // TODO: compare contents
+        return true
     }
 }

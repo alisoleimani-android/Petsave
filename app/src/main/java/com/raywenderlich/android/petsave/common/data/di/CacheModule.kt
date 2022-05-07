@@ -58,19 +58,23 @@ abstract class CacheModule {
 
     companion object {
 
-        @Singleton
         @Provides
+        @Singleton
         fun provideDatabase(
             @ApplicationContext context: Context
-        ): PetSaveDatabase = Room.databaseBuilder(
-            context,
-            PetSaveDatabase::class.java,
-            "petsave.db"
-        ).build()
+        ): PetSaveDatabase {
+            return Room.databaseBuilder(
+                context,
+                PetSaveDatabase::class.java,
+                "petsave.db"
+            )
+                .build()
+        }
 
         @Provides
-        fun provideAnimalsDao(petSaveDatabase: PetSaveDatabase): AnimalsDao =
-            petSaveDatabase.animalsDao()
+        fun provideAnimalsDao(
+            petSaveDatabase: PetSaveDatabase
+        ): AnimalsDao = petSaveDatabase.animalsDao()
 
         @Provides
         fun provideOrganizationsDao(petSaveDatabase: PetSaveDatabase): OrganizationsDao =

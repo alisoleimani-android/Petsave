@@ -8,7 +8,7 @@ import io.reactivex.Flowable
 abstract class AnimalsDao {
 
     @Transaction
-    @Query("SELECT * FROM animals")
+    @Query("SELECT * FROM animals ORDER BY animalId DESC")
     abstract fun getAllAnimals(): Flowable<List<CachedAnimalAggregate>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

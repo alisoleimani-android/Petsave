@@ -1,6 +1,42 @@
+/*
+ * Copyright (c) 2020 Razeware LLC
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * Notwithstanding the foregoing, you may not use, copy, modify, merge, publish,
+ * distribute, sublicense, create a derivative work, and/or sell copies of the
+ * Software in any work that is designed, intended, or marketed for pedagogical or
+ * instructional purposes related to programming, coding, application development,
+ * or information technology.  Permission for such use, copying, modification,
+ * merger, publication, distribution, sublicensing, creation of derivative works,
+ * or sale is expressly withheld.
+ *
+ * This project and source code may use libraries or frameworks that are
+ * released under various Open-Source licenses. Use of those libraries and
+ * frameworks are governed by their own individual licenses.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package com.raywenderlich.android.petsave.common.data
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.room.Room
+import androidx.test.platform.app.InstrumentationRegistry
 import com.google.common.truth.Truth.assertThat
 import com.raywenderlich.android.petsave.common.data.api.PetFinderApi
 import com.raywenderlich.android.petsave.common.data.api.model.mappers.ApiAnimalMapper
@@ -14,10 +50,14 @@ import com.raywenderlich.android.petsave.common.data.di.PreferencesModule
 import com.raywenderlich.android.petsave.common.data.preferences.FakePreferences
 import com.raywenderlich.android.petsave.common.data.preferences.Preferences
 import com.raywenderlich.android.petsave.common.domain.repositories.AnimalRepository
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -32,16 +72,15 @@ import javax.inject.Inject
 class PetFinderAnimalRepositoryTest {
 
     private val fakeServer = FakeServer()
-    private lateinit var api: PetFinderApi
     private lateinit var repository: AnimalRepository
+    private lateinit var api: PetFinderApi
+    private lateinit var cache: Cache
 
     @get:Rule
     var hiltRule = HiltAndroidRule(this)
 
     @get:Rule
     var instantTaskExecutorRule = InstantTaskExecutorRule()
-
-    private lateinit var cache: Cache
 
     @Inject
     lateinit var database: PetSaveDatabase
@@ -59,15 +98,28 @@ class PetFinderAnimalRepositoryTest {
     @JvmField
     val preferences: Preferences = FakePreferences()
 
+    @Module
+    @InstallIn(SingletonComponent::class)
+    object TestCacheModule {
+
+        @Provides
+        fun provideRoomDatabase(): PetSaveDatabase {
+            return Room.inMemoryDatabaseBuilder(
+                InstrumentationRegistry.getInstrumentation().context,
+                PetSaveDatabase::class.java
+            )
+                .allowMainThreadQueries()
+                .build()
+        }
+    }
+
     @Before
     fun setup() {
         fakeServer.start()
 
         preferences.deleteTokenInfo()
         preferences.putToken("validToken")
-        preferences.putTokenExpirationTime(
-            Instant.now().plusSeconds(3600).epochSecond
-        )
+        preferences.putTokenExpirationTime(Instant.now().plusSeconds(3600).epochSecond)
         preferences.putTokenType("Bearer")
 
         hiltRule.inject()
@@ -77,9 +129,19 @@ class PetFinderAnimalRepositoryTest {
             .build()
             .create(PetFinderApi::class.java)
 
-        cache = RoomCache(database.organizationsDao(), database.animalsDao())
+        cache = RoomCache(database.animalsDao(), database.organizationsDao())
 
-        repository = PetFinderAnimalRepository(api, cache, apiAnimalMapper, apiPaginationMapper)
+        repository = PetFinderAnimalRepository(
+            api,
+            cache,
+            apiAnimalMapper,
+            apiPaginationMapper
+        )
+    }
+
+    @After
+    fun teardown() {
+        fakeServer.shutdown()
     }
 
     @Test
@@ -100,25 +162,22 @@ class PetFinderAnimalRepositoryTest {
     fun insertAnimals_success() {
         // Given
         val expectedAnimalId = 124L
-        fakeServer.setHappyPathDispatcher()
 
-        // When
         runBlocking {
+            fakeServer.setHappyPathDispatcher()
+
             val paginatedAnimals = repository.requestMoreAnimals(1, 100)
             val animal = paginatedAnimals.animals.first()
+
+            // When
             repository.storeAnimals(listOf(animal))
         }
 
         // Then
-        repository.getAnimals().test().run {
-            assertNoErrors()
-            assertNotComplete()
-            assertValue { it.first().id == expectedAnimalId }
-        }
-    }
+        val testObserver = repository.getAnimals().test()
 
-    @After
-    fun teardown() {
-        fakeServer.shutdown()
+        testObserver.assertNoErrors()
+        testObserver.assertNotComplete()
+        testObserver.assertValue { it.first().id == expectedAnimalId }
     }
 }

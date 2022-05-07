@@ -32,24 +32,37 @@
  * THE SOFTWARE.
  */
 
-package com.raywenderlich.android.petsave.common.domain.repositories
+package com.raywenderlich.android.petsave.animalsnearyou.presentation
 
-import com.raywenderlich.android.petsave.common.domain.model.animal.Animal
-import com.raywenderlich.android.petsave.common.domain.model.animal.details.AnimalWithDetails
-import com.raywenderlich.android.petsave.common.domain.model.pagination.PaginatedAnimals
-import io.reactivex.Flowable
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
-interface AnimalRepository {
-    fun getAnimals(): Flowable<List<Animal>>
+abstract class InfiniteScrollListener(
+    private val layoutManager: GridLayoutManager,
+    private val pageSize: Int
+) :
+    RecyclerView.OnScrollListener() {
 
-    suspend fun requestMoreAnimals(pageToLoad: Int, numberOfItems: Int): PaginatedAnimals
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        super.onScrolled(recyclerView, dx, dy)
 
-    suspend fun storeAnimals(animals: List<AnimalWithDetails>)
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.itemCount
+        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
 
-//  TODO: Uncomment for remote search
-//  suspend fun searchAnimalsRemotely(
-//      pageToLoad: Int,
-//      searchParameters: SearchParameters,
-//      numberOfItems: Int
-//  ): PaginatedAnimals
+        if (!isLoading() && !isLastPage()) {
+            if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount
+                && firstVisibleItemPosition >= 0
+                && totalItemCount >= pageSize
+            ) {
+                loadMoreItems()
+            }
+        }
+    }
+
+    abstract fun loadMoreItems()
+
+    abstract fun isLastPage(): Boolean
+
+    abstract fun isLoading(): Boolean
 }
