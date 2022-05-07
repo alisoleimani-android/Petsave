@@ -39,6 +39,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import com.raywenderlich.android.petsave.common.presentation.AnimalsAdapter
 import com.raywenderlich.android.petsave.databinding.FragmentAnimalsNearYouBinding
 
 class AnimalsNearYouFragment : Fragment() {
@@ -59,6 +61,31 @@ class AnimalsNearYouFragment : Fragment() {
         _binding = FragmentAnimalsNearYouBinding.inflate(inflater, container, false)
 
         return binding.root
+    }
+
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?
+    ) {
+        super.onViewCreated(view, savedInstanceState)
+        setupUI()
+    }
+
+    private fun setupUI() {
+        val adapter = createAdapter()
+        setupRecyclerView(adapter)
+    }
+
+    private fun createAdapter(): AnimalsAdapter {
+        return AnimalsAdapter()
+    }
+
+    private fun setupRecyclerView(animalsNearYouAdapter: AnimalsAdapter) {
+        binding.animalsRecyclerView.apply {
+            adapter = animalsNearYouAdapter
+            layoutManager = GridLayoutManager(requireContext(), ITEMS_PER_ROW)
+            setHasFixedSize(true)
+        }
     }
 
     override fun onDestroyView() {
