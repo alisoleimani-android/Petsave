@@ -38,11 +38,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.snackbar.Snackbar
+import com.raywenderlich.android.petsave.R
 import com.raywenderlich.android.petsave.common.presentation.AnimalsAdapter
+import com.raywenderlich.android.petsave.common.presentation.Event
 import com.raywenderlich.android.petsave.databinding.FragmentAnimalsNearYouBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AnimalsNearYouFragment : Fragment() {
 
     companion object {
@@ -52,6 +59,8 @@ class AnimalsNearYouFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var _binding: FragmentAnimalsNearYouBinding? = null
+
+    private val viewModel: AnimalsNearYouFragmentViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,11 +78,13 @@ class AnimalsNearYouFragment : Fragment() {
     ) {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
+        requestInitialAnimalsList()
     }
 
     private fun setupUI() {
         val adapter = createAdapter()
         setupRecyclerView(adapter)
+        observeViewStateUpdates(adapter)
     }
 
     private fun createAdapter(): AnimalsAdapter {
@@ -86,6 +97,44 @@ class AnimalsNearYouFragment : Fragment() {
             layoutManager = GridLayoutManager(requireContext(), ITEMS_PER_ROW)
             setHasFixedSize(true)
         }
+    }
+
+    private fun observeViewStateUpdates(adapter: AnimalsAdapter) {
+        viewModel.state.observe(viewLifecycleOwner) {
+            updateScreenState(it, adapter)
+        }
+    }
+
+    private fun updateScreenState(
+        state: AnimalsNearYouViewState,
+        adapter: AnimalsAdapter
+    ) {
+        binding.progressBar.isVisible = state.loading
+        adapter.submitList(state.animals)
+        handleNoMoreAnimalsNearby(state.noMoreAnimalsNearby)
+        handleFailures(state.failure)
+    }
+
+    private fun handleNoMoreAnimalsNearby(noMoreAnimalsNearby: Boolean) {
+
+    }
+
+    private fun handleFailures(failure: Event<Throwable>?) {
+        val unhandledFailure = failure?.getContentIfNotHandled() ?: return
+        val fallbackMessage = getString(R.string.an_error_occurred)
+        val snackbarMessage = if (unhandledFailure.message.isNullOrEmpty()) {
+            fallbackMessage
+        } else {
+            unhandledFailure.message!!
+        }
+
+        if (snackbarMessage.isNotEmpty()) {
+            Snackbar.make(requireView(), snackbarMessage, Snackbar.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun requestInitialAnimalsList() {
+        viewModel.onEvent(AnimalsNearYouEvent.RequestInitialAnimalsList)
     }
 
     override fun onDestroyView() {
